@@ -1,0 +1,8 @@
+java.time.LocalDate -> 只对年月日做出处理
+java.time.LocalTime -> 只对时分秒纳秒做出处理
+java.time.LocalDateTime -> 同时可以处理年月日和时分秒
+
+java.util.Date和SimpleDateFormatter都不是线程安全的，而LocalDate和LocalTime和最基本的String一样，是不变类型，不单线程安全，而且不能修改。
+java.util.Date月份是从0开始，一月是0，十二月是11。java.time.LocalDate月份和星期都改成了enum，就不可能再用错了。
+java.util.Date是一个“万能接口”，它包含日期，时间，还有毫秒数，如果你只需日期或者时间那么有一些数据就没啥用，在新的java8中，日期和时间被明确划分为LocalDate和LocalTime，LocalDate无法包含时间，LocalTime无法包含日期，当然，LocalDateTime才能同时包含时间和日期。
+java.util.Date推算时间（比如往前推几天/往后推几天/推算某年某月第一天等等）要结合Calender要写好多代码，相当麻烦，LocaDate只需要使用对应的方法即可

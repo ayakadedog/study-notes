@@ -1,0 +1,150 @@
+//JS中用XHR（XmlHttpResponse）
+1.什么是ajax函数?
+
+这是jQuery封装的一个函数,称为$.ajax()函数,通过对象调用ajax()函数用来异步加载相关的请求.依靠的是JavaScript提供的一个对象:XHR(全称XmlHttpResponse)
+
+2.ajax()函数的语法结构:
+
+使用ajax()时需要传递一个方法体作为方法的参数来使用(一对大括号就是一个方法体)
+ajax接受多个参数时,参数与参数之间使用","分割
+每一组参数之间使用":"进行分割
+参数的组成部分一个是参数的名称(不能随便定义),另一个是参数的值(必须用字符串来表示)
+参数的声明顺序没有要求
+
+//ajax接受多个参数，参数之间用”,“分割，参数内容用“ : ”分割
+$.ajax( {
+	url: " ",
+	type: " ",
+	data: " ",
+	dataType:" ",
+	success: function(){
+	
+	},
+	error: function(){
+
+	},
+} );
+
+
+//ajax函数参数
+url	请求地址，不能包含参数列表内容 url:"localhost:8080/user/reg"
+type	请求类型，type:"POST"
+data	提交的数据，data:"username=tom&pwd=123"
+dataType	提交的数据类型，一般来说就是JSON,dataType:"json"
+success	当服务器正常响应时会自动调用success方法，并将服务器返回的数据以参数传递给这个方法的参数
+error	当服务器 未 正常响应时会自动调用error方法，并将服务器返回的数据以参数传递给这个方法的参数
+
+
+<script>
+            $("#btn-login").click(function () {
+                $.ajax({
+                    url: "/users/reg",
+                    type: "POST",
+                    data: $("#form-login").serialize(),
+                    dataType: "JSON",
+                    success: function (json) {
+                        if (json.state == 200) {
+                            alert("登录成功")
+                            //跳转到系统主页index.html
+                            //index和login在同一个目录结构下,所以可以用相对路
+                            // 径index.html来确定跳转的页面,index.html和./ind
+                            // ex.html完全一样,因为./就是表示当前目录
+                            // 结构,也可以用../web/index.html
+                            location.href = "index.html";
+                        } else {
+                            alert("登录失败")
+                        }
+                    },
+                    error: function (xhr) {
+                        //xhr.message可以获取未知异常的信息
+                        alert("登录时产生未知的异常!"+xhr.message);
+                    }
+                });
+            });
+</script>
+
+
+
+
+//检测到访问此页面就运行这个
+	$(document).ready(function() {
+		
+	});
+
+
+
+
+		<script type="text/javascript">
+			//监听注册按钮是否被点击,被点击则执行方法
+			$("#btn-reg").click(function () {
+				//动态获取表单中控制数据
+					// let username = $("#username").val();
+					// let pwd = $("#password").val();
+				//发送ajax（）的异步请求来完成注册
+				$.ajax( {
+					url: "/users/register",
+					type: "POST",
+					//username=Tom&password=123
+					data: $("#form-reg").serialize(),
+					//data:"username="+username + "&password="+pwd,
+					dataType:"JSON",
+					success: function(json){
+						if (json.state === 200)
+							alert("注册成功");
+						else if (json.state === 4000)
+							alert("用户名已经被占用");
+						else
+							alert("注册失败");
+					},
+					error: function(xhr){
+						alert("产生未知错误"+xhr.status);
+					},
+				} );
+			});
+		</script>
+
+
+
+
+
+
+
+
+
+
+
+		<script type="text/javascript">
+			$("#btn-reg").click(function() {
+				console.log($("#form-reg").serialize());
+				$.ajax({
+					url: "/users/reg",
+					type: "POST",
+					data: $("#form-reg").serialize(),
+					dataType: "json",
+					success: function(json) {
+						if (json.state == 200) {
+							alert("注册成功！");
+						// location.href = "login.html";
+						} else {
+							alert("注册失败！" + json.message);
+						}
+					}
+				});
+			});
+		</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

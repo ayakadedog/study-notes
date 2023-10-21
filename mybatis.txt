@@ -1,0 +1,330 @@
+1.SQL建表
+
+2.导坐标(maven)
+<dependency>
+  <groupId>org.mybatis</groupId>
+  <artifactId>mybatis</artifactId>
+  <version>3.5.5</version>
+</dependency>
+
+<!--junit 单元测试-->
+<dependency>
+  <groupId>junit</groupId>
+  <artifactId>junit</artifactId>
+  <version>4.13</version>
+  <scope>test</scope>
+</dependency>
+
+<!--slf4j-->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.21</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.21</version>
+    </dependency> 
+
+
+
+3.写mybaties核心配置文件
+(mybatis.xml){
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+  <environments default="development">
+    <environment id="development">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="${driver}"/>
+        <property name="url" value="${url}"/>
+        <property name="username" value="${username}"/>
+        <property name="password" value="${password}"/>
+      </dataSource>
+    </environment>
+  </environments>
+  <mappers>
+<!--加载SQL映射文件  类路径-->
+    <mapper resource="org/mybatis/example/BlogMapper.xml"/>
+  </mappers>
+</configuration>
+}
+
+4.映射SQL文件
+
+//映射文件（UserMapper）{
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace命名空间-->
+
+<mapper namespace="test">
+
+<!--id 取名称	resultType 返回类型 在User类里面就包装成User，填路径-->
+
+  <select id="selectBlog" resultType="Blog">
+    select
+    * 
+    from 
+    Blog 
+  </select>
+</mapper>
+}
+
+
+5.编码
+   1.定义POJO类（新开一个User,下面都写在User里）
+	元素跟SQL里的表名相同//alt+鼠标左   Integer
+	get+set+toString//快捷生成
+
+   2.加载核心配置文件，获取SqlSessinFactory对象
+	String resource = "org/mybatis/example/mybatis-config.xml";
+	InputStream inputStream = Resources.getResourceAsStream(resource);
+	SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+	
+   3.获取SqlSessin对象，执行SQL语句
+	SqlSessioin sqlSession = sqlSessionFactory.openSession();
+	
+	list<User> users = sqlSession.selectList("test.selectBlog");//看上面的路径
+	
+	
+
+
+
+
+
+
+
+Mapper代理
+1.定义SQL映射同名的Mapper接口（一个Mapper在Java里，另一个在resources里）
+
+2.设置SQL映射文件的namespace属性为Mapper接口全限定名（Java里Mapper的路径）
+
+3.在Mapper接口中定义方法，方法名和SQL映射文件中sql语句的id相同，保证参数类型和返回值相同
+SqlSessioin sqlSession = sqlSessionFactory.openSession();
+	
+list<User> users = sqlSession.selectList("test.selectBlog");//看上面的路径
+改为
+
+UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
+
+List<User> users = userMapper.selectBlog"();
+
+
+
+
+
+
+
+
+
+增删改查
+1.查
+1.1查所有
+//（select  *   from   Blog   +  无参数  + list集合对象（返回值））
+	//1.编写接口方法  Mapper接口
+	//2.写SQL语句，SQL映射文件
+	<select id="selectAll" resultType="Blog">
+    	select  * 					select  id , user_name as userName //给数据库表名取别名和mapper中一样就能找
+   	from   Blog 
+	</select>
+	
+
+						在外面定义sql片段（取别名）						
+						<sql id = "brand_column">
+						id , user_name as userName
+						</sql>
+									
+						<select id="selectAll" resultType="Blog">
+    							select  <include refid = "brand_column"/>
+   							from   Blog 
+						</select>
+
+
+
+
+						<!--****resultMap 做映射****-->
+						<resultMap id="UserEntityMap" type="com.example.demo.entity.User">
+       						 <!--将表的字段和类的属性名不一致的进行匹配指定,名称一致的也可以指定,但没必要
+      							  但是,在定义映射规则时无论主键名称是否一致都不能省
+        								column属性:表示表中的字段名称
+       								property属性:表示类中的属性名称-->
+        						<result column="user_name " property="userName"></result>
+   						 </resultMap>
+						
+						<select id="selectAll" resultType="Blog">
+    							select  * 					
+   							from   Blog 
+						</select>											
+
+
+<select id="selectById" resultType="Blog">
+    	select  * 
+    	from   Blog 
+	where id = #{};
+</select>
+
+
+1.2查详细
+//（select  *   from   Blog   where  ******     +  参数  + 对象（返回值  单个）)
+	//1.编写接口方法  Mapper接口
+	//接口要传值          Blog   seletcById(int id);
+	//2.写SQL语句，SQL映射文件
+	<select id="selectById" resultType="Blog">      <!--parameterType = "int"  设置参数类型-->
+    	select  * 					
+   	from   Blog 	<!--动态查表${tableName}-->
+	where id = #{id};     <!--${}也能用，但有SQL注入     &lt ===<(小于)
+						  <![CDATA[
+						          <
+						   ]]>
+			-->
+	</select>	
+
+
+1.3多条件查询	
+	//（select  *   from   Blog   +  所有查询条件  + list集合对象（返回值））
+	//1.编写接口方法  Mapper接口
+	List<Blog>  selectByCondition(@Param("status") int status @Param("ComName"));
+	//封装一下
+	List<Blog>  selectByCondition(Blog blog);
+	List<Blog>  selectByCondition(Map map);
+
+	//2.写SQL语句，SQL映射文件
+	<select id="selectByCondition" resultType="Blog">
+    	select  * 
+    	from   Blog 
+	where 
+	status = #{status}		<!--模糊查询要在java中自己加-->
+	and ComName like #{ComName};
+	</select>
+
+1.4动态查询（if  choose  trim  foreach）
+
+	<select id="selectByCondition" resultType="Blog">
+    	select  * 
+    	from   Blog 
+          <where> 		<!--在外面套个where-->
+          <!--where 1 = 1 	<!--添加恒等式1=1，给下面所有内容加上and-->-->
+	<if   test = "status != null">
+	        and  status = #{status}	
+	</if>	
+	<if   test = "ComName != null  and  ComName != ' ' ">
+	        and  ComName like  #{ComName};
+	</if>
+         </where>
+	</select>
+
+
+2.增
+//（除id外参数  + void（返回值））
+	//1.编写接口方法  Mapper接口
+	void insert(Blog blog);
+	//2.写SQL语句，SQL映射文件
+
+<!--不能及时获取id加这个指向id  useGeneratedKeys="true" keyProperty="id"-->
+   <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+       	insert into Blog (username,`password`,salt,phone,email,gender,avatar) 
+	values (#{username},#{password},#{salt},#{phone},#{email},#{gender},#{avatar});
+    </insert>
+
+
+
+3.改
+3.1改全字段
+//（所有参数  + void（返回值））
+	//1.编写接口方法  Mapper接口
+	void update(Blog blog);
+	//2.写SQL语句，SQL映射文件
+	<update id = update>
+	  update  Blog
+	  set
+	       username = #{username},
+	       password =  #{password}
+	  where  id = #{id};
+	</update>
+
+3.2修改动态字段
+<update id = update>
+	  update  Blog
+         <set>   <!--set标签-->
+	<if   test = “username != null  and  username != ' ' ">
+	       username = #{username},
+	</if>	
+	<if   test = ”password != null  and  password != ' ' ">
+	       password = #{password},
+	</if>	
+	  where  id = #{id};
+         </set>
+</update>
+
+
+
+
+
+
+4.删(一般采取逻辑删除)
+4.1删一个
+	//1.编写接口方法  Mapper接口
+	void delete(int id);
+	//2.写SQL语句，SQL映射文件
+
+	<delete id ="delete">
+	       delete  from Blog where id = #{id};
+	</delete>
+
+4.2删一把
+	//1.编写接口方法  Mapper接口
+	void deleteById(@Param("ids")int [] ids);
+	//2.写SQL语句，SQL映射文件
+
+	<delete id ="deleteById">
+	       delete  from Blog 
+		where id in 
+		<foreach collection ="ids" item = "id" separator="," open="(" close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+
+
+
+5.传参（POJO,Map,Collection,List,Array）
+
+
+
+
+
+
+
+
+<!--最上面的给我用这个-->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.mybatis.example.BlogMapper">
+  <select id="selectBlog" resultType="Blog">
+    select * from Blog where id = #{id}
+  </select>
+</mapper>
+
+
+
+<update id="UpdateInfoByUid">
+        update t_user
+        set <if test="phone!=null">phone = #{phone},</if>
+            <if test="email!=null">email = #{email},</if>
+            <if test="gender!=null">gender = #{gender},</if>
+            modified_user=#{modifiedUser},
+            modified_time=#{modifiedTime}
+        where uid=#{uid}
+    </update>
+ 

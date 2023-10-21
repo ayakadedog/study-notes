@@ -1,0 +1,17 @@
+文件上传
+前端：
+        method="POST"  	请求方式必为POST
+        entype="mulipart/form-data"  	格式必为mulipart
+        type="file"	使用input的file控件上传
+如：
+        <form method="POST" action="/user/upload" enctype="multipart/form-data">
+	<input type="file" name="MyFile">
+	<input type="submit" name="submit">
+        </form>
+后端：
+        Apache的组件 commons-fileupload       commons-io
+        springweb中用MultipartFile类即可接收文件
+
+
+文件下载
+
